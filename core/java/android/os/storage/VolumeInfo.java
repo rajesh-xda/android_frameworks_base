@@ -335,10 +335,6 @@ public class VolumeInfo implements Parcelable {
         if (userPath == null) {
             userPath = new File("/dev/null");
         }
-        File internalPath = getInternalPathForUser(userId);
-        if (internalPath == null) {
-            internalPath = new File("/dev/null");
-        }
 
         String description = null;
         String derivedFsUuid = fsUuid;
@@ -377,7 +373,7 @@ public class VolumeInfo implements Parcelable {
             description = context.getString(android.R.string.unknownName);
         }
 
-        return new StorageVolume(id, userPath, internalPath, description, isPrimary(), removable,
+        return new StorageVolume(id, userPath, description, isPrimary(), removable,
                 emulated, allowMassStorage, maxFileSize, new UserHandle(userId),
                 derivedFsUuid, envState);
     }
