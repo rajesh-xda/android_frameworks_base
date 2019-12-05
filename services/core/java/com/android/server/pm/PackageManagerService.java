@@ -24,6 +24,7 @@ import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.REQUEST_DELETE_PACKAGES;
 import static android.Manifest.permission.SET_HARMFUL_APP_WARNINGS;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+import static android.Manifest.permission.WRITE_MEDIA_STORAGE;
 import static android.content.pm.PackageManager.CERT_INPUT_RAW_X509;
 import static android.content.pm.PackageManager.CERT_INPUT_SHA256;
 import static android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DEFAULT;
@@ -3183,14 +3184,35 @@ public class PackageManagerService extends IPackageManager.Stub
 
             // Disable components marked for disabling at build-time
             mDisabledComponentsList = new ArrayList<ComponentName>();
-            enableComponents(mContext.getResources().getStringArray(
-                    com.android.internal.R.array.config_deviceDisabledComponents), false);
-            enableComponents(mContext.getResources().getStringArray(
-                    com.android.internal.R.array.config_globallyDisabledComponents), false);
+            for (String name : mContext.getResources().getStringArray(
+                    com.android.internal.R.array.config_disabledComponents)) {
+                ComponentName cn = ComponentName.unflattenFromString(name);
+                mDisabledComponentsList.add(cn);
+                Slog.v(TAG, "Disabling " + name);
+                String className = cn.getClassName();
+                PackageSetting pkgSetting = mSettings.mPackages.get(cn.getPackageName());
+                if (pkgSetting == null || pkgSetting.pkg == null
+                        || !pkgSetting.pkg.hasComponentClassName(className)) {
+                    Slog.w(TAG, "Unable to disable " + name);
+                    continue;
+                }
+                pkgSetting.disableComponentLPw(className, UserHandle.USER_OWNER);
+            }
 
             // Enable components marked for forced-enable at build-time
-            enableComponents(mContext.getResources().getStringArray(
-                    com.android.internal.R.array.config_forceEnabledComponents), true);
+            for (String name : mContext.getResources().getStringArray(
+                    com.android.internal.R.array.config_forceEnabledComponents)) {
+                ComponentName cn = ComponentName.unflattenFromString(name);
+                Slog.v(TAG, "Enabling " + name);
+                String className = cn.getClassName();
+                PackageSetting pkgSetting = mSettings.mPackages.get(cn.getPackageName());
+                if (pkgSetting == null || pkgSetting.pkg == null
+                        || !pkgSetting.pkg.hasComponentClassName(className)) {
+                    Slog.w(TAG, "Unable to enable " + name);
+                    continue;
+                }
+                pkgSetting.enableComponentLPw(className, UserHandle.USER_OWNER);
+            }
 
             // If this is first boot after an OTA, and a normal boot, then
             // we need to clear code cache directories.
@@ -3306,29 +3328,6 @@ public class PackageManagerService extends IPackageManager.Stub
         mInstaller.setWarnIfHeld(mPackages);
 
         Trace.traceEnd(TRACE_TAG_PACKAGE_MANAGER);
-    }
-
-    private void enableComponents(String[] components, boolean enable) {
-        // Disable or enable components marked at build-time
-        for (String name : components) {
-            ComponentName cn = ComponentName.unflattenFromString(name);
-            if (!enable) {
-                mDisabledComponentsList.add(cn);
-            }
-            Slog.v(TAG, "Changing enabled state of " + name + " to " + enable);
-            String className = cn.getClassName();
-            PackageSetting pkgSetting = mSettings.mPackages.get(cn.getPackageName());
-            if (pkgSetting == null || pkgSetting.pkg == null
-                    || !pkgSetting.pkg.hasComponentClassName(className)) {
-                Slog.w(TAG, "Unable to change enabled state of " + name + " to " + enable);
-                continue;
-            }
-            if (enable) {
-                pkgSetting.enableComponentLPw(className, UserHandle.USER_OWNER);
-            } else {
-                pkgSetting.disableComponentLPw(className, UserHandle.USER_OWNER);
-            }
-        }
     }
 
     /**
