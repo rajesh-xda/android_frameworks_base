@@ -85,7 +85,6 @@ public final class StorageVolume implements Parcelable {
     private final String mId;
     @UnsupportedAppUsage
     private final File mPath;
-    private final File mInternalPath;
     @UnsupportedAppUsage
     private final String mDescription;
     @UnsupportedAppUsage
@@ -129,12 +128,11 @@ public final class StorageVolume implements Parcelable {
     public static final int STORAGE_ID_PRIMARY = 0x00010001;
 
     /** {@hide} */
-    public StorageVolume(String id, File path, File internalPath, String description,
+    public StorageVolume(String id, File path, String description,
             boolean primary, boolean removable, boolean emulated, boolean allowMassStorage,
             long maxFileSize, UserHandle owner, String fsUuid, String state) {
         mId = Preconditions.checkNotNull(id);
         mPath = Preconditions.checkNotNull(path);
-        mInternalPath = Preconditions.checkNotNull(internalPath);
         mDescription = Preconditions.checkNotNull(description);
         mPrimary = primary;
         mRemovable = removable;
@@ -149,7 +147,6 @@ public final class StorageVolume implements Parcelable {
     private StorageVolume(Parcel in) {
         mId = in.readString();
         mPath = new File(in.readString());
-        mInternalPath = new File(in.readString());
         mDescription = in.readString();
         mPrimary = in.readInt() != 0;
         mRemovable = in.readInt() != 0;
@@ -176,16 +173,6 @@ public final class StorageVolume implements Parcelable {
     @TestApi
     public String getPath() {
         return mPath.toString();
-    }
-
-    /**
-     * Returns the path of the underlying filesystem.
-     *
-     * @return the internal path
-     * @hide
-     */
-    public String getInternalPath() {
-        return mInternalPath.toString();
     }
 
     /** {@hide} */
@@ -423,7 +410,6 @@ public final class StorageVolume implements Parcelable {
         pw.increaseIndent();
         pw.printPair("mId", mId);
         pw.printPair("mPath", mPath);
-        pw.printPair("mInternalPath", mInternalPath);
         pw.printPair("mDescription", mDescription);
         pw.printPair("mPrimary", mPrimary);
         pw.printPair("mRemovable", mRemovable);
@@ -457,7 +443,6 @@ public final class StorageVolume implements Parcelable {
     public void writeToParcel(Parcel parcel, int flags) {
         parcel.writeString(mId);
         parcel.writeString(mPath.toString());
-        parcel.writeString(mInternalPath.toString());
         parcel.writeString(mDescription);
         parcel.writeInt(mPrimary ? 1 : 0);
         parcel.writeInt(mRemovable ? 1 : 0);
