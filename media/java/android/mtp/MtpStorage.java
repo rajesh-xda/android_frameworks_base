@@ -35,9 +35,10 @@ public class MtpStorage {
     private final long mMaxFileSize;
     private final String mVolumeName;
 
+
     public MtpStorage(StorageVolume volume, int storageId) {
         mStorageId = storageId;
-        mPath = volume.getInternalPath();
+        mPath = volume.getPath();
         mDescription = volume.getDescription(null);
         mRemovable = volume.isRemovable();
         mMaxFileSize = volume.getMaxFileSize();
