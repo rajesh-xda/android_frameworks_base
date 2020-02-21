@@ -19,6 +19,7 @@ package android.mtp;
 import android.annotation.UnsupportedAppUsage;
 import android.os.storage.StorageVolume;
 import android.provider.MediaStore;
+import android.content.Context;
 
 /**
  * This class represents a storage unit on an MTP device.
